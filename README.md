@@ -6,6 +6,8 @@ A command-line tool that fetches and displays recent GitHub user activity in a c
 
 This tool aggregates GitHub user events from the public GitHub API and presents them in a summarized format, making it easy to quickly see what a user has been up to across their repositories.
 
+Read more about the project [here]("https://roadmap.sh/projects/github-user-activity")
+
 ## Features
 
 - **Activity Aggregation**: Groups similar events to reduce noise and provide cleaner output
