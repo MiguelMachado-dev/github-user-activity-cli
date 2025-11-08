@@ -27,27 +27,91 @@ func (s *userActivityServiceImpl) GetUserActivity(username string) ([]string, er
 
 	var summaries []string
 
+	// Aggregate events by type and repository to avoid duplicate summaries.
+	type aggregateKey struct {
+		eventType string
+		repoName  string
+	}
+
+	type aggregateValue struct {
+		occurrences int
+	}
+
+	aggregated := make(map[aggregateKey]aggregateValue)
+	var order []aggregateKey
+
 	for _, activity := range activities {
 		repoName := activity.Repo.Name
 
 		switch activity.Type {
 		case "PushEvent":
-			count := len(activity.Payload.Commits)
-			summaries = append(summaries, fmt.Sprintf("Pushed %d commit(s) to %s", count, repoName))
+			key := aggregateKey{eventType: activity.Type, repoName: repoName}
+			value, exists := aggregated[key]
+			if !exists {
+				order = append(order, key)
+			}
+			value.occurrences++
+			aggregated[key] = value
 
 		case "PullRequestEvent":
-			action := activity.Payload.Action
-			summaries = append(summaries, fmt.Sprintf("%s a pull request in %s", action, repoName))
+			key := aggregateKey{eventType: activity.Type, repoName: repoName}
+			value, exists := aggregated[key]
+			if !exists {
+				order = append(order, key)
+			}
+			value.occurrences++
+			aggregated[key] = value
 
 		case "IssuesEvent":
-			action := activity.Payload.Action
-			summaries = append(summaries, fmt.Sprintf("%s an issue in %s", action, repoName))
+			key := aggregateKey{eventType: activity.Type, repoName: repoName}
+			value, exists := aggregated[key]
+			if !exists {
+				order = append(order, key)
+			}
+			value.occurrences++
+			aggregated[key] = value
 
 		case "ForkEvent":
-			summaries = append(summaries, fmt.Sprintf("Forked repository %s", repoName))
+			key := aggregateKey{eventType: activity.Type, repoName: repoName}
+			value, exists := aggregated[key]
+			if !exists {
+				order = append(order, key)
+			}
+			value.occurrences++
+			aggregated[key] = value
 
 		default:
 			// Ignore other event types
+		}
+	}
+
+	for _, key := range order {
+		value := aggregated[key]
+		switch key.eventType {
+		case "PushEvent":
+			if value.occurrences > 1 {
+				summaries = append(summaries, fmt.Sprintf("Pushed to %s (%d events)", key.repoName, value.occurrences))
+			} else {
+				summaries = append(summaries, fmt.Sprintf("Pushed to %s", key.repoName))
+			}
+		case "PullRequestEvent":
+			if value.occurrences > 1 {
+				summaries = append(summaries, fmt.Sprintf("Pull request activity in %s (%d events)", key.repoName, value.occurrences))
+			} else {
+				summaries = append(summaries, fmt.Sprintf("Pull request activity in %s", key.repoName))
+			}
+		case "IssuesEvent":
+			if value.occurrences > 1 {
+				summaries = append(summaries, fmt.Sprintf("Issue activity in %s (%d events)", key.repoName, value.occurrences))
+			} else {
+				summaries = append(summaries, fmt.Sprintf("Issue activity in %s", key.repoName))
+			}
+		case "ForkEvent":
+			if value.occurrences > 1 {
+				summaries = append(summaries, fmt.Sprintf("Forked repository %s (%d times)", key.repoName, value.occurrences))
+			} else {
+				summaries = append(summaries, fmt.Sprintf("Forked repository %s", key.repoName))
+			}
 		}
 	}
 

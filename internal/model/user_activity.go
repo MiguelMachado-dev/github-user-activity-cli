@@ -31,16 +31,11 @@ type PullRequest struct {
 }
 
 type Payload struct {
-	PushID      int64        `json:"push_id,omitempty"`
-	Size        int          `json:"size,omitempty"`
-	Commits     []Commit     `json:"commits,omitempty"`
-	Ref         string       `json:"ref,omitempty"`
-	Before      string       `json:"before,omitempty"`
-	Head        string       `json:"head,omitempty"`
-	Action      string       `json:"action,omitempty"`
-	PullRequest *PullRequest `json:"pull_request,omitempty"`
-	RefType     string       `json:"ref_type,omitempty"`
-	RefName     string       `json:"ref_name,omitempty"`
+	Ref    string `json:"ref,omitempty"`
+	Before string `json:"before,omitempty"`
+	Head   string `json:"head,omitempty"`
+	PushID int64  `json:"push_id,omitempty"`
+	RepoID int64  `json:"repository_id,omitempty"`
 }
 
 type UserActivity struct {
